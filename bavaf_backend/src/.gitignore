@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+
+# Archivos compilados
+dist/
+
+# Uploads locales (en producción van a S3)
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/

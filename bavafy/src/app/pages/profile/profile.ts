@@ -67,6 +67,7 @@ export class ProfileComponent implements OnInit {
   newPlaylistDesc     = '';
 
   //── Canciones ───────────────────────────────────────────────
+  allSongsData:  Song[] = [];
   featuredSongs: Song[] = [];
   recentSongs:   Song[] = [];
 
@@ -118,8 +119,10 @@ export class ProfileComponent implements OnInit {
     this.songService.getAll().subscribe({
       next: res => {
         const mapped = res.songs.map(s => this.mapSong(s));
+        this.allSongsData  = mapped;
         this.featuredSongs = mapped.slice(0, 6);
         this.recentSongs   = mapped.slice(6, 10);
+        this.updateLikedSongs();
       }
     });
   }
@@ -144,8 +147,7 @@ export class ProfileComponent implements OnInit {
   }
 
   private updateLikedSongs() {
-    const all = [...this.featuredSongs, ...this.recentSongs];
-    this.likedSongs = all.filter(s => this.likedIds.has(s.id));
+    this.likedSongs = this.allSongsData.filter(s => this.likedIds.has(s.id));
   }
 
   private mapSong(s: ApiSong): Song {
@@ -163,7 +165,7 @@ export class ProfileComponent implements OnInit {
   }
 
   private get allSongs(): Song[] {
-    return [...this.featuredSongs, ...this.recentSongs];
+    return this.allSongsData;
   }
 
   //── Navegación ──────────────────────────────────────────────
@@ -237,15 +239,19 @@ export class ProfileComponent implements OnInit {
       this.songService.removeLike(song.id).subscribe({
         next: () => {
           this.likedIds.delete(song.id);
-          this.likedSongs = this.likedSongs.filter(s => s.id !== song.id);
-        }
+          this.updateLikedSongs();
+          this.cdr.detectChanges();
+        },
+        error: err => console.error('Error removing like:', err)
       });
     } else {
       this.songService.addLike(song.id).subscribe({
         next: () => {
           this.likedIds.add(song.id);
-          this.likedSongs = [...this.likedSongs, song];
-        }
+          this.updateLikedSongs();
+          this.cdr.detectChanges();
+        },
+        error: err => console.error('Error adding like:', err)
       });
     }
   }

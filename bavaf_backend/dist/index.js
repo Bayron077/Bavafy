@@ -12,6 +12,7 @@ const Auth_routes_1 = __importDefault(require("./routes/Auth.routes"));
 const User_routes_1 = __importDefault(require("./routes/User.routes"));
 const Song_routes_1 = __importDefault(require("./routes/Song.routes"));
 const Playlist_routes_1 = __importDefault(require("./routes/Playlist.routes"));
+const Like_routes_1 = __importDefault(require("./routes/Like.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT ?? 3000;
@@ -26,6 +27,7 @@ app.use('/api/auth', Auth_routes_1.default);
 app.use('/api/users', User_routes_1.default);
 app.use('/api/songs', Song_routes_1.default);
 app.use('/api/playlists', Playlist_routes_1.default);
+app.use('/api/likes', Like_routes_1.default);
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

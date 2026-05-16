@@ -4,8 +4,8 @@ import { authenticate } from '../middlewares/Auth.middleware';
 
 const router = Router();
 
-router.get('/',           authenticate, getMyLikes);
-router.post('/:songId',   authenticate, addLike);
+router.get('/',         authenticate, getMyLikes);
+router.post('/:songId', authenticate, addLike);
 router.delete('/:songId', authenticate, removeLike);
 
 export default router;

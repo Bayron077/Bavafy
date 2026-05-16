@@ -3,11 +3,11 @@
 --  Curso: Programación Web · UTP · 2026-1
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS music_app
+CREATE DATABASE IF NOT EXISTS bavafy_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE music_app;
+USE bavafy_db;
 
 -- ------------------------------------------------------------
 -- 1. users

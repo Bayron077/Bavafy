@@ -1,8 +1,9 @@
-import { Component, computed } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { SongService, Song as ApiSong } from '../../services/song';
 
 interface Song {
   id:       number;
@@ -11,6 +12,7 @@ interface Song {
   album:    string;
   duration: string;
   cover:    string;
+  file_path?: string;
 }
 
 interface Playlist {
@@ -27,30 +29,33 @@ interface Playlist {
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
 
-  // ── Auth ────────────────────────────────────────────────────
+  private authService = inject(AuthService);
+  private songService = inject(SongService);
+
   user = computed(() => this.authService.currentUser());
 
-  // ── Player ──────────────────────────────────────────────────
+  //── Player ──────────────────────────────────────────────────────
   currentSong: Song | null = null;
   isPlaying:   boolean = false;
-  progress:    number  = 30;
+  progress:    number  = 0;
   volume:      number  = 80;
   isMuted:     boolean = false;
+  private audio = new Audio();
 
-  // ── Navegación ──────────────────────────────────────────────
+  //── Navegación ──────────────────────────────────────────────────
   activeSection: string = 'inicio';
 
-  // ── Búsqueda ────────────────────────────────────────────────
+  //── Búsqueda ────────────────────────────────────────────────────
   searchQuery:   string = '';
   searchResults: Song[] = [];
 
-  // ── Me Gusta ────────────────────────────────────────────────
+  // ── Me Gusta ────────────────────────────────────────────────────
   likedSongs: Song[]      = [];
   likedIds:   Set<number> = new Set();
 
-  // ── Playlists ───────────────────────────────────────────────
+  // ── Playlists ───────────────────────────────────────────────────
   playlists:           Playlist[]    = [];
   selectedPlaylist:    Playlist | null = null;
   showCreatePlaylist:  boolean        = false;
@@ -58,43 +63,81 @@ export class ProfileComponent {
   newPlaylistDesc:     string         = '';
   private nextPlaylistId: number      = 1;
 
-  // ── Canciones de prueba (luego vienen del backend) ──────────
-  featuredSongs: Song[] = [
-    { id: 1,  title: 'Blinding Lights', artist: 'The Weeknd',     album: 'After Hours',      duration: '3:20', cover: '' },
-    { id: 2,  title: 'Stay',            artist: 'Kid LAROI',      album: 'F*CK LOVE 3',      duration: '2:21', cover: '' },
-    { id: 3,  title: 'Levitating',      artist: 'Dua Lipa',       album: 'Future Nostalgia', duration: '3:23', cover: '' },
-    { id: 4,  title: 'Peaches',         artist: 'Justin Bieber',  album: 'Justice',          duration: '3:18', cover: '' },
-    { id: 5,  title: 'Good 4 U',        artist: 'Olivia Rodrigo', album: 'SOUR',             duration: '2:58', cover: '' },
-    { id: 6,  title: 'Montero',         artist: 'Lil Nas X',      album: 'Montero',          duration: '2:17', cover: '' },
-  ];
+  // ── Canciones reales ────────────────────────────────────────────
+  featuredSongs: Song[] = [];
+  recentSongs:   Song[] = [];
 
-  recentSongs: Song[] = [
-    { id: 7,  title: 'Heat Waves',      artist: 'Glass Animals',  album: 'Dreamland', duration: '3:59', cover: '' },
-    { id: 8,  title: 'Industry Baby',   artist: 'Lil Nas X',      album: 'Montero',   duration: '3:32', cover: '' },
-    { id: 9,  title: 'Love Story',      artist: 'Taylor Swift',   album: 'Fearless',  duration: '3:55', cover: '' },
-    { id: 10, title: 'Drivers License', artist: 'Olivia Rodrigo', album: 'SOUR',      duration: '4:02', cover: '' },
-  ];
+  // ── Admin: subir canción ────────────────────────────────────────
+  adminTitle       = '';
+  adminArtist      = '';
+  adminAlbum       = '';
+  adminGenre       = '';
+  adminDuration    = '';
+  adminAudioFile:  File | null = null;
+  adminCoverFile:  File | null = null;
+  adminUploading   = false;
+  adminMessage     = '';
+  adminError       = '';
+
+  ngOnInit() {
+    this.loadSongs();
+  }
+
+  loadSongs() {
+    this.songService.getAll().subscribe({
+      next: res => {
+        const mapped = res.songs.map(s => this.mapSong(s));
+        this.featuredSongs = mapped.slice(0, 6);
+        this.recentSongs   = mapped.slice(6, 10);
+      },
+      error: () => {}
+    });
+  }
+
+  private mapSong(s: ApiSong): Song {
+    const mins = Math.floor(s.duration_sec / 60);
+    const secs = String(s.duration_sec % 60).padStart(2, '0');
+    return {
+      id:        s.id,
+      title:     s.title,
+      artist:    s.artist,
+      album:     s.album ?? '',
+      duration:  `${mins}:${secs}`,
+      cover:     s.cover_url ? `http://localhost:3000/${s.cover_url}` : '',
+      file_path: s.file_path,
+    };
+  }
 
   private get allSongs(): Song[] {
     return [...this.featuredSongs, ...this.recentSongs];
   }
 
-  constructor(private authService: AuthService) {}
-
-  // ── Navegación ──────────────────────────────────────────────
+  // ── Navegación ──────────────────────────────────────────────────
   setActiveSection(section: string): void {
     this.activeSection    = section;
     this.selectedPlaylist = null;
   }
 
-  // ── Player ──────────────────────────────────────────────────
+  // ── Player ──────────────────────────────────────────────────────
   playSong(song: Song): void {
+    this.audio.pause();
     this.currentSong = song;
-    this.isPlaying   = true;
+    if (song.file_path) {
+      this.audio.src = `http://localhost:3000/${song.file_path}`;
+      this.audio.play();
+      this.isPlaying = true;
+      this.audio.ontimeupdate = () => {
+        this.progress = this.audio.duration
+          ? (this.audio.currentTime / this.audio.duration) * 100
+          : 0;
+      };
+    }
   }
 
   togglePlay(): void {
-    if (this.currentSong) this.isPlaying = !this.isPlaying;
+    if (!this.currentSong) return;
+    this.isPlaying ? this.audio.pause() : this.audio.play();
+    this.isPlaying = !this.isPlaying;
   }
 
   nextSong(): void {
@@ -113,9 +156,20 @@ export class ProfileComponent {
 
   toggleMute(): void {
     this.isMuted = !this.isMuted;
+    this.audio.muted = this.isMuted;
   }
 
-  // ── Búsqueda ────────────────────────────────────────────────
+  setVolume(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.volume = Number(input.value);
+    this.audio.volume = this.volume / 100;
+    if (this.volume > 0 && this.isMuted) {
+      this.isMuted = false;
+      this.audio.muted = false;
+    }
+  }
+
+  // ── Búsqueda ────────────────────────────────────────────────────
   onSearch(): void {
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) { this.searchResults = []; return; }
@@ -126,7 +180,7 @@ export class ProfileComponent {
     );
   }
 
-  // ── Me Gusta ────────────────────────────────────────────────
+  // ── Me Gusta ────────────────────────────────────────────────────
   toggleLike(song: Song, event: Event): void {
     event.stopPropagation();
     if (this.likedIds.has(song.id)) {
@@ -138,22 +192,19 @@ export class ProfileComponent {
     }
   }
 
-  isLiked(id: number): boolean {
-    return this.likedIds.has(id);
-  }
+  isLiked(id: number): boolean { return this.likedIds.has(id); }
 
-  // ── Playlists ───────────────────────────────────────────────
+  // ── Playlists ───────────────────────────────────────────────────
   createPlaylist(): void {
     if (!this.newPlaylistName.trim()) return;
-    const playlist: Playlist = {
-      id:          this.nextPlaylistId++,
-      name:        this.newPlaylistName.trim(),
+    this.playlists = [...this.playlists, {
+      id: this.nextPlaylistId++,
+      name: this.newPlaylistName.trim(),
       description: this.newPlaylistDesc.trim(),
-      songs:       [],
-    };
-    this.playlists          = [...this.playlists, playlist];
-    this.newPlaylistName    = '';
-    this.newPlaylistDesc    = '';
+      songs: [],
+    }];
+    this.newPlaylistName = '';
+    this.newPlaylistDesc = '';
     this.showCreatePlaylist = false;
   }
 
@@ -174,18 +225,61 @@ export class ProfileComponent {
     this.selectedPlaylist.songs = this.selectedPlaylist.songs.filter(s => s.id !== song.id);
   }
 
-  // ── Helpers ─────────────────────────────────────────────────
-  logout(): void {
-    this.authService.logout();
+  // ── Admin ───────────────────────────────────────────────────────
+  onAdminAudio(e: Event) {
+    this.adminAudioFile = (e.target as HTMLInputElement).files?.[0] ?? null;
   }
 
+  onAdminCover(e: Event) {
+    this.adminCoverFile = (e.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  submitSong() {
+    if (!this.adminTitle || !this.adminArtist || !this.adminDuration || !this.adminAudioFile) {
+      this.adminError = 'Título, artista, duración y audio son requeridos.';
+      return;
+    }
+    this.adminError = '';
+    this.adminMessage = '';
+    this.adminUploading = true;
+
+    const fd = new FormData();
+    fd.append('title',        this.adminTitle);
+    fd.append('artist',       this.adminArtist);
+    fd.append('album',        this.adminAlbum);
+    fd.append('genre',        this.adminGenre);
+    fd.append('duration_sec', this.adminDuration);
+    fd.append('file',         this.adminAudioFile);
+    if (this.adminCoverFile) fd.append('cover', this.adminCoverFile);
+
+    this.songService.uploadSong(fd).subscribe({
+      next: res => {
+        this.adminMessage   = `✅ "${res.song.title}" subida correctamente`;
+        this.adminUploading = false;
+        this.adminTitle = this.adminArtist = this.adminAlbum = this.adminGenre = this.adminDuration = '';
+        this.adminAudioFile = this.adminCoverFile = null;
+        this.loadSongs();
+      },
+      error: err => {
+        this.adminError     = err.error?.message ?? 'Error al subir';
+        this.adminUploading = false;
+      }
+    });
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────
+  logout(): void { this.authService.logout(); }
+
   getInitials(): string {
-    const name = this.user()?.name ?? '';
-    return name.slice(0, 2).toUpperCase();
+    return (this.user()?.name ?? '').slice(0, 2).toUpperCase();
   }
 
   getCoverColor(id: number): string {
-    const colors = ['#8A0194', '#6a0172', '#4a0150', '#b001c4', '#3d0068', '#cc00dd'];
+    const colors = ['#8A0194','#6a0172','#4a0150','#b001c4','#3d0068','#cc00dd'];
     return colors[id % colors.length]!;
+  }
+
+  isSuperAdmin(): boolean {
+    return this.user()?.role === 'superadmin';
   }
 }

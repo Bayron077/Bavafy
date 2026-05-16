@@ -8,94 +8,285 @@
     </div>
 
     <nav class="nav-menu">
-      <button 
-        class="nav-item" 
+      <button
+        class="nav-item"
         [class.active]="activeSection === 'inicio'"
         (click)="setActiveSection('inicio')">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>Inicio</span>
       </button>
-      <button 
-        class="nav-item" 
+      <button
+        class="nav-item"
         [class.active]="activeSection === 'buscar'"
         (click)="setActiveSection('buscar')">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         <span>Buscar</span>
       </button>
-      <button 
-        class="nav-item" 
+      <button
+        class="nav-item"
         [class.active]="activeSection === 'biblioteca'"
         (click)="setActiveSection('biblioteca')">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
         <span>Tu Biblioteca</span>
       </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'megustas'"
+        (click)="setActiveSection('megustas')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <span>Me Gusta</span>
+      </button>
+      <button
+        class="nav-item"
+        [class.active]="activeSection === 'perfil'"
+        (click)="setActiveSection('perfil')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <span>Mi Perfil</span>
+      </button>
     </nav>
 
     <div class="sidebar-divider"></div>
 
+    <!-- Playlists en sidebar -->
+    <div class="playlists-sidebar-header">
+      <span class="playlists-label">Tus playlists</span>
+      <button class="add-playlist-btn" (click)="setActiveSection('biblioteca')" title="Crear playlist">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </button>
+    </div>
     <div class="playlists-container">
-      <span class="playlist-item">Tus Favoritos</span>
-      <span class="playlist-item">Playlist de Verano</span>
-      <span class="playlist-item">Lo Mejor del 2026</span>
-      <span class="playlist-item">Para Estudiar</span>
-      <span class="playlist-item">Rock Clásico</span>
-      <span class="playlist-item">Nuevos Lanzamientos</span>
+      <span
+        class="playlist-item"
+        *ngFor="let pl of playlists"
+        (click)="openPlaylist(pl)">
+        {{ pl.name }}
+      </span>
+      <span class="playlist-empty" *ngIf="playlists.length === 0">
+        No tienes playlists aún
+      </span>
     </div>
   </aside>
 
   <!-- Contenido Principal -->
   <main class="main-content">
-    
+
     <!-- Topbar -->
     <header class="topbar">
       <div class="topbar-nav">
         <button class="nav-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
         <button class="nav-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
       </div>
-
       <div class="user-profile">
         <button class="upgrade-btn">Explorar Premium</button>
-        <div class="user-avatar" title="{{ userName }}">
+        <div class="user-avatar" (click)="setActiveSection('perfil')" title="{{ user()?.name }}">
           {{ getInitials() }}
         </div>
       </div>
     </header>
 
-    <!-- Contenido Dinamico -->
     <div class="content-scroll">
-      <h1 class="section-title">¡Hola, {{ userName }}!</h1>
 
-      <!-- Destacados -->
-      <section class="music-section">
-        <h2 class="sub-title">Para ti</h2>
-        <div class="cards-grid">
-          <div class="music-card" *ngFor="let song of featuredSongs" (click)="playSong(song)">
-            <div class="card-cover" [style.background]="getCoverColor(song.id)">
-              <div class="play-overlay">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      <!-- ── INICIO ─────────────────────────────────────────── -->
+      <ng-container *ngIf="activeSection === 'inicio'">
+        <h1 class="section-title">¡Hola, {{ user()?.name }}!</h1>
+
+        <section class="music-section">
+          <h2 class="sub-title">Para ti</h2>
+          <div class="cards-grid">
+            <div class="music-card" *ngFor="let song of featuredSongs" (click)="playSong(song)">
+              <div class="card-cover" [style.background]="getCoverColor(song.id)">
+                <div class="play-overlay">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </div>
               </div>
+              <h3 class="card-title">{{ song.title }}</h3>
+              <p class="card-artist">{{ song.artist }}</p>
             </div>
-            <h3 class="card-title">{{ song.title }}</h3>
-            <p class="card-artist">{{ song.artist }}</p>
+          </div>
+        </section>
+
+        <section class="music-section mt-4">
+          <h2 class="sub-title">Escuchado recientemente</h2>
+          <div class="cards-grid">
+            <div class="music-card" *ngFor="let song of recentSongs" (click)="playSong(song)">
+              <div class="card-cover" [style.background]="getCoverColor(song.id)">
+                <div class="play-overlay">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </div>
+              </div>
+              <h3 class="card-title">{{ song.title }}</h3>
+              <p class="card-artist">{{ song.artist }}</p>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ── BUSCAR ──────────────────────────────────────────── -->
+      <ng-container *ngIf="activeSection === 'buscar'">
+        <h1 class="section-title">Buscar</h1>
+        <div class="search-bar-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input
+            class="search-input"
+            type="text"
+            placeholder="Artistas, canciones, álbumes..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+          />
+        </div>
+
+        <div class="songs-list" *ngIf="searchResults.length > 0">
+          <div class="song-row" *ngFor="let song of searchResults; let i = index" (click)="playSong(song)">
+            <span class="song-index">{{ i + 1 }}</span>
+            <div class="song-cover-sm" [style.background]="getCoverColor(song.id)"></div>
+            <div class="song-info">
+              <span class="song-name">{{ song.title }}</span>
+              <span class="song-meta">{{ song.artist }} · {{ song.album }}</span>
+            </div>
+            <span class="song-duration">{{ song.duration }}</span>
+            <button class="like-btn" (click)="toggleLike(song, $event)" [class.liked]="isLiked(song.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isLiked(song.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
           </div>
         </div>
-      </section>
+        <p class="empty-state" *ngIf="searchQuery && searchResults.length === 0">
+          No se encontraron resultados para "{{ searchQuery }}"
+        </p>
+        <p class="empty-state" *ngIf="!searchQuery">
+          Busca tus canciones, artistas o álbumes favoritos
+        </p>
+      </ng-container>
 
-      <!-- Recientes -->
-      <section class="music-section mt-4">
-        <h2 class="sub-title">Escuchado recientemente</h2>
-        <div class="cards-grid">
-          <div class="music-card" *ngFor="let song of recentSongs" (click)="playSong(song)">
-            <div class="card-cover" [style.background]="getCoverColor(song.id)">
-              <div class="play-overlay">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              </div>
-            </div>
-            <h3 class="card-title">{{ song.title }}</h3>
-            <p class="card-artist">{{ song.artist }}</p>
+      <!-- ── BIBLIOTECA (Playlists) ─────────────────────────── -->
+      <ng-container *ngIf="activeSection === 'biblioteca'">
+        <div class="section-header">
+          <h1 class="section-title">Tu Biblioteca</h1>
+          <button class="btn-create-playlist" (click)="showCreatePlaylist = !showCreatePlaylist">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Nueva playlist
+          </button>
+        </div>
+
+        <!-- Formulario crear playlist -->
+        <div class="create-playlist-form" *ngIf="showCreatePlaylist">
+          <input
+            class="playlist-name-input"
+            type="text"
+            placeholder="Nombre de la playlist"
+            [(ngModel)]="newPlaylistName"
+          />
+          <input
+            class="playlist-name-input"
+            type="text"
+            placeholder="Descripción (opcional)"
+            [(ngModel)]="newPlaylistDesc"
+          />
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="showCreatePlaylist = false">Cancelar</button>
+            <button class="btn-confirm" (click)="createPlaylist()">Crear</button>
           </div>
         </div>
-      </section>
+
+        <!-- Lista de playlists -->
+        <div class="playlists-grid" *ngIf="playlists.length > 0">
+          <div class="playlist-card" *ngFor="let pl of playlists" (click)="openPlaylist(pl)">
+            <div class="playlist-cover" [style.background]="getCoverColor(pl.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <h3 class="playlist-card-name">{{ pl.name }}</h3>
+            <p class="playlist-card-desc">{{ pl.description || 'Sin descripción' }}</p>
+            <button class="delete-playlist-btn" (click)="deletePlaylist(pl, $event)" title="Eliminar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <p class="empty-state" *ngIf="playlists.length === 0 && !showCreatePlaylist">
+          No tienes playlists aún. ¡Crea una!
+        </p>
+
+        <!-- Detalle de playlist seleccionada -->
+        <div class="playlist-detail" *ngIf="selectedPlaylist">
+          <div class="playlist-detail-header">
+            <div class="playlist-detail-cover" [style.background]="getCoverColor(selectedPlaylist.id)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            </div>
+            <div>
+              <p class="detail-label">Playlist</p>
+              <h2 class="detail-name">{{ selectedPlaylist.name }}</h2>
+              <p class="detail-desc">{{ selectedPlaylist.description }}</p>
+              <p class="detail-count">{{ selectedPlaylist.songs.length }} canciones</p>
+            </div>
+          </div>
+          <div class="songs-list">
+            <div class="song-row" *ngFor="let song of selectedPlaylist.songs; let i = index" (click)="playSong(song)">
+              <span class="song-index">{{ i + 1 }}</span>
+              <div class="song-cover-sm" [style.background]="getCoverColor(song.id)"></div>
+              <div class="song-info">
+                <span class="song-name">{{ song.title }}</span>
+                <span class="song-meta">{{ song.artist }} · {{ song.album }}</span>
+              </div>
+              <span class="song-duration">{{ song.duration }}</span>
+              <button class="remove-from-playlist-btn" (click)="removeSongFromPlaylist(song, $event)" title="Quitar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+            <p class="empty-state" *ngIf="selectedPlaylist.songs.length === 0">
+              Esta playlist está vacía. Agrega canciones desde Buscar.
+            </p>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── ME GUSTA ────────────────────────────────────────── -->
+      <ng-container *ngIf="activeSection === 'megustas'">
+        <div class="liked-header">
+          <div class="liked-cover">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </div>
+          <div>
+            <p class="detail-label">Playlist</p>
+            <h2 class="detail-name">Canciones que te gustan</h2>
+            <p class="detail-count">{{ likedSongs.length }} canciones</p>
+          </div>
+        </div>
+
+        <div class="songs-list" *ngIf="likedSongs.length > 0">
+          <div class="song-row" *ngFor="let song of likedSongs; let i = index" (click)="playSong(song)">
+            <span class="song-index">{{ i + 1 }}</span>
+            <div class="song-cover-sm" [style.background]="getCoverColor(song.id)"></div>
+            <div class="song-info">
+              <span class="song-name">{{ song.title }}</span>
+              <span class="song-meta">{{ song.artist }} · {{ song.album }}</span>
+            </div>
+            <span class="song-duration">{{ song.duration }}</span>
+            <button class="like-btn liked" (click)="toggleLike(song, $event)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+            </button>
+          </div>
+        </div>
+        <p class="empty-state" *ngIf="likedSongs.length === 0">
+          Aún no has marcado canciones como favoritas. ¡Dale ❤️ a las que te gusten!
+        </p>
+      </ng-container>
+
+      <!-- ── MI PERFIL ───────────────────────────────────────── -->
+      <ng-container *ngIf="activeSection === 'perfil'">
+        <h1 class="section-title">Mi Perfil</h1>
+        <div class="profile-card">
+          <div class="profile-avatar-lg">{{ getInitials() }}</div>
+          <div class="profile-info">
+            <h2 class="profile-name">{{ user()?.name }}</h2>
+            <p class="profile-email">{{ user()?.email }}</p>
+            <p class="profile-role">{{ user()?.role === 'superadmin' ? '⭐ Administrador' : '🎵 Usuario' }}</p>
+          </div>
+          <button class="btn-logout" (click)="logout()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Cerrar sesión
+          </button>
+        </div>
+      </ng-container>
+
     </div>
   </main>
 
@@ -107,6 +298,9 @@
         <h4 class="song-title">{{ currentSong.title }}</h4>
         <span class="song-artist">{{ currentSong.artist }}</span>
       </div>
+      <button class="like-btn" *ngIf="currentSong" (click)="toggleLike(currentSong, $event)" [class.liked]="isLiked(currentSong.id)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isLiked(currentSong!.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </button>
     </div>
 
     <div class="player-controls-container">
@@ -115,16 +309,13 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
         </button>
         <button class="play-btn" (click)="togglePlay()">
-          <!-- Icono de Play -->
           <svg *ngIf="!isPlaying" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          <!-- Icono de Pausa -->
           <svg *ngIf="isPlaying" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
         </button>
         <button class="control-btn" (click)="nextSong()">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </div>
-
       <div class="player-progress">
         <span class="time-text">1:04</span>
         <div class="progress-bar-bg">

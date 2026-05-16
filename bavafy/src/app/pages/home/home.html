@@ -1,1 +1,22 @@
-<p>home works!</p>
+<div class="home">
+  <div class="header">
+    <h1>¡Hola, {{ auth.currentUser()?.name }}!</h1>
+    <a *ngIf="auth.isSuperAdmin()" routerLink="/admin" class="btn-admin">
+      + Subir canción
+    </a>
+  </div>
+
+  <h2>Para ti</h2>
+  <div class="grid">
+    <div class="card" *ngFor="let song of songs; let i = index"
+         (click)="play(song)"
+         [style.background]="getColor(i)">
+      <img *ngIf="song.cover_url" [src]="song.cover_url" [alt]="song.title"/>
+      <div class="info">
+        <span class="title">{{ song.title }}</span>
+        <span class="artist">{{ song.artist }}</span>
+      </div>
+      <span class="play-icon">{{ currentSong?.id === song.id && isPlaying ? '⏸' : '▶' }}</span>
+    </div>
+  </div>
+</div>

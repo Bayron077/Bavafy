@@ -8,5 +8,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'home', component: HomeComponent },
-  { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent) }
+  { path: 'profile', loadComponent: () => import('./pages/profile/profile').then(m => m.ProfileComponent) },
+  { path: 'admin', loadComponent: () => import('./pages/admin/admin').then(m => m.AdminComponent) },
 ];

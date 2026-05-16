@@ -1,0 +1,28 @@
+<div class="admin">
+  <h1>Subir canción</h1>
+
+  <div class="success" *ngIf="message">{{ message }}</div>
+  <div class="error"   *ngIf="error">{{ error }}</div>
+
+  <div class="form">
+    <input [(ngModel)]="title"        placeholder="Título *" />
+    <input [(ngModel)]="artist"       placeholder="Artista *" />
+    <input [(ngModel)]="album"        placeholder="Álbum" />
+    <input [(ngModel)]="genre"        placeholder="Género" />
+    <input [(ngModel)]="duration_sec" placeholder="Duración en segundos *" type="number" />
+
+    <label>Archivo de audio (mp3, wav) *
+      <input type="file" accept="audio/*" (change)="onAudioChange($event)" />
+    </label>
+
+    <label>Portada (jpg, png, webp)
+      <input type="file" accept="image/*" (change)="onCoverChange($event)" />
+    </label>
+
+    <button (click)="submit()" [disabled]="uploading">
+      {{ uploading ? 'Subiendo...' : 'Subir canción' }}
+    </button>
+
+    <a routerLink="/home">← Volver al inicio</a>
+  </div>
+</div>

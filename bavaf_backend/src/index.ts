@@ -9,6 +9,7 @@ import authRoutes from './routes/Auth.routes';
 import userRoutes from './routes/User.routes';
 import songRoutes from './routes/Song.routes';
 import playlistRoutes from './routes/Playlist.routes';
+import likeRoutes from './routes/Like.routes';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/auth',      authRoutes);
 app.use('/api/users',     userRoutes);
 app.use('/api/songs',     songRoutes);
 app.use('/api/playlists', playlistRoutes);
+app.use('/api/likes', likeRoutes);
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {

@@ -843,3 +843,93 @@
   accent-color: #8A0194;
   cursor: pointer;
 }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4px 4px;
+}
+
+.card-info { flex: 1; }
+
+.card-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.music-card:hover .card-actions { opacity: 1; }
+
+.card-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  &:hover { color: #fff; }
+  &.liked { color: #cc00dd; }
+}
+
+.progress-slider {
+  flex: 1;
+  accent-color: #8A0194;
+  cursor: pointer;
+  height: 4px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 300px;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  h3 { color: #fff; font-size: 18px; margin: 0; }
+}
+
+.modal-song {
+  color: #aaa;
+  font-size: 14px;
+  margin: 0;
+}
+
+.modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.modal-playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #2a2a2a;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  &:hover { background: #8A0194; }
+}

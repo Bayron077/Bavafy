@@ -1,9 +1,9 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { SongService, Song as ApiSong } from '../../services/song';
+import { SongService, Song as ApiSong, Playlist as ApiPlaylist } from '../../services/song';
 
 interface Song {
   id:       number;
@@ -33,65 +33,119 @@ export class ProfileComponent implements OnInit {
 
   private authService = inject(AuthService);
   private songService = inject(SongService);
+  private cdr         = inject(ChangeDetectorRef);
+
+  @ViewChild('progressBar') progressBar!: ElementRef<HTMLInputElement>;
 
   user = computed(() => this.authService.currentUser());
 
-  //── Player ──────────────────────────────────────────────────────
+  //── Player ──────────────────────────────────────────────────
   currentSong: Song | null = null;
-  isPlaying:   boolean = false;
-  progress:    number  = 0;
-  volume:      number  = 80;
-  isMuted:     boolean = false;
+  isPlaying   = false;
+  progress    = 0;
+  currentTime = '0:00';
+  volume      = 80;
+  isMuted     = false;
   private audio = new Audio();
 
-  //── Navegación ──────────────────────────────────────────────────
-  activeSection: string = 'inicio';
+  //── Navegación ──────────────────────────────────────────────
+  activeSection = 'inicio';
 
-  //── Búsqueda ────────────────────────────────────────────────────
-  searchQuery:   string = '';
+  //── Búsqueda ────────────────────────────────────────────────
+  searchQuery   = '';
   searchResults: Song[] = [];
 
-  // ── Me Gusta ────────────────────────────────────────────────────
+  //── Me Gusta ────────────────────────────────────────────────
   likedSongs: Song[]      = [];
   likedIds:   Set<number> = new Set();
 
-  // ── Playlists ───────────────────────────────────────────────────
-  playlists:           Playlist[]    = [];
-  selectedPlaylist:    Playlist | null = null;
-  showCreatePlaylist:  boolean        = false;
-  newPlaylistName:     string         = '';
-  newPlaylistDesc:     string         = '';
-  private nextPlaylistId: number      = 1;
+  //── Playlists ───────────────────────────────────────────────
+  playlists:          Playlist[]      = [];
+  selectedPlaylist:   Playlist | null = null;
+  showCreatePlaylist  = false;
+  newPlaylistName     = '';
+  newPlaylistDesc     = '';
 
-  // ── Canciones reales ────────────────────────────────────────────
+  //── Canciones ───────────────────────────────────────────────
   featuredSongs: Song[] = [];
   recentSongs:   Song[] = [];
 
-  // ── Admin: subir canción ────────────────────────────────────────
-  adminTitle       = '';
-  adminArtist      = '';
-  adminAlbum       = '';
-  adminGenre       = '';
-  adminDuration    = '';
-  adminAudioFile:  File | null = null;
-  adminCoverFile:  File | null = null;
-  adminUploading   = false;
-  adminMessage     = '';
-  adminError       = '';
+  //── Admin ────────────────────────────────────────────────────
+  adminTitle      = '';
+  adminArtist     = '';
+  adminAlbum      = '';
+  adminGenre      = '';
+  adminDuration   = '';
+  adminAudioFile: File | null = null;
+  adminCoverFile: File | null = null;
+  adminUploading  = false;
+  adminMessage    = '';
+  adminError      = '';
+
+  //── Modal agregar a playlist ─────────────────────────────────
+  showPlaylistModal  = false;
+  songToAdd: Song | null = null;
 
   ngOnInit() {
     this.loadSongs();
+    this.loadLikes();
+    this.loadPlaylists();
+    this.audio.volume = this.volume / 100;
+
+    this.audio.ontimeupdate = () => {
+      this.progress = this.audio.duration
+        ? (this.audio.currentTime / this.audio.duration) * 100 : 0;
+      const mins = Math.floor(this.audio.currentTime / 60);
+      const secs = String(Math.floor(this.audio.currentTime % 60)).padStart(2, '0');
+      this.currentTime = `${mins}:${secs}`;
+      if (this.progressBar) {
+        this.progressBar.nativeElement.value = String(this.progress);
+      }
+      this.cdr.detectChanges();
+    };
+
+    this.audio.onended = () => {
+      this.isPlaying   = false;
+      this.progress    = 0;
+      this.currentTime = '0:00';
+      if (this.progressBar) this.progressBar.nativeElement.value = '0';
+      this.cdr.detectChanges();
+    };
   }
 
+  //── Cargar datos ────────────────────────────────────────────
   loadSongs() {
     this.songService.getAll().subscribe({
       next: res => {
         const mapped = res.songs.map(s => this.mapSong(s));
         this.featuredSongs = mapped.slice(0, 6);
         this.recentSongs   = mapped.slice(6, 10);
-      },
-      error: () => {}
+      }
     });
+  }
+
+  loadLikes() {
+    this.songService.getMyLikes().subscribe({
+      next: res => {
+        this.likedIds = new Set(res.likes.map(l => l.song_id));
+        this.updateLikedSongs();
+      }
+    });
+  }
+
+  loadPlaylists() {
+    this.songService.getMyPlaylists().subscribe({
+      next: res => {
+        this.playlists = (res.playlists ?? []).map((p: ApiPlaylist) => ({
+          id: p.id, name: p.name, description: p.description, songs: []
+        }));
+      }
+    });
+  }
+
+  private updateLikedSongs() {
+    const all = [...this.featuredSongs, ...this.recentSongs];
+    this.likedSongs = all.filter(s => this.likedIds.has(s.id));
   }
 
   private mapSong(s: ApiSong): Song {
@@ -112,13 +166,13 @@ export class ProfileComponent implements OnInit {
     return [...this.featuredSongs, ...this.recentSongs];
   }
 
-  // ── Navegación ──────────────────────────────────────────────────
+  //── Navegación ──────────────────────────────────────────────
   setActiveSection(section: string): void {
     this.activeSection    = section;
     this.selectedPlaylist = null;
   }
 
-  // ── Player ──────────────────────────────────────────────────────
+  //── Player ──────────────────────────────────────────────────
   playSong(song: Song): void {
     this.audio.pause();
     this.currentSong = song;
@@ -126,11 +180,6 @@ export class ProfileComponent implements OnInit {
       this.audio.src = `http://localhost:3000/${song.file_path}`;
       this.audio.play();
       this.isPlaying = true;
-      this.audio.ontimeupdate = () => {
-        this.progress = this.audio.duration
-          ? (this.audio.currentTime / this.audio.duration) * 100
-          : 0;
-      };
     }
   }
 
@@ -138,6 +187,11 @@ export class ProfileComponent implements OnInit {
     if (!this.currentSong) return;
     this.isPlaying ? this.audio.pause() : this.audio.play();
     this.isPlaying = !this.isPlaying;
+  }
+
+  seekTo(e: Event): void {
+    const input = e.target as HTMLInputElement;
+    this.audio.currentTime = (Number(input.value) / 100) * this.audio.duration;
   }
 
   nextSong(): void {
@@ -155,21 +209,17 @@ export class ProfileComponent implements OnInit {
   }
 
   toggleMute(): void {
-    this.isMuted = !this.isMuted;
+    this.isMuted     = !this.isMuted;
     this.audio.muted = this.isMuted;
   }
 
-  setVolume(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.volume = Number(input.value);
-    this.audio.volume = this.volume / 100;
-    if (this.volume > 0 && this.isMuted) {
-      this.isMuted = false;
-      this.audio.muted = false;
-    }
+  setVolume(e: Event): void {
+    this.volume          = Number((e.target as HTMLInputElement).value);
+    this.audio.volume    = this.volume / 100;
+    this.isMuted         = this.volume === 0;
   }
 
-  // ── Búsqueda ────────────────────────────────────────────────────
+  //── Búsqueda ────────────────────────────────────────────────
   onSearch(): void {
     const q = this.searchQuery.trim().toLowerCase();
     if (!q) { this.searchResults = []; return; }
@@ -180,52 +230,94 @@ export class ProfileComponent implements OnInit {
     );
   }
 
-  // ── Me Gusta ────────────────────────────────────────────────────
+  //── Me Gusta ────────────────────────────────────────────────
   toggleLike(song: Song, event: Event): void {
     event.stopPropagation();
     if (this.likedIds.has(song.id)) {
-      this.likedIds.delete(song.id);
-      this.likedSongs = this.likedSongs.filter(s => s.id !== song.id);
+      this.songService.removeLike(song.id).subscribe({
+        next: () => {
+          this.likedIds.delete(song.id);
+          this.likedSongs = this.likedSongs.filter(s => s.id !== song.id);
+        }
+      });
     } else {
-      this.likedIds.add(song.id);
-      this.likedSongs = [...this.likedSongs, song];
+      this.songService.addLike(song.id).subscribe({
+        next: () => {
+          this.likedIds.add(song.id);
+          this.likedSongs = [...this.likedSongs, song];
+        }
+      });
     }
   }
 
   isLiked(id: number): boolean { return this.likedIds.has(id); }
 
-  // ── Playlists ───────────────────────────────────────────────────
+  //── Playlists ───────────────────────────────────────────────
   createPlaylist(): void {
     if (!this.newPlaylistName.trim()) return;
-    this.playlists = [...this.playlists, {
-      id: this.nextPlaylistId++,
-      name: this.newPlaylistName.trim(),
-      description: this.newPlaylistDesc.trim(),
-      songs: [],
-    }];
-    this.newPlaylistName = '';
-    this.newPlaylistDesc = '';
-    this.showCreatePlaylist = false;
+    this.songService.createPlaylist(this.newPlaylistName.trim(), this.newPlaylistDesc.trim()).subscribe({
+      next: res => {
+        this.playlists      = [...this.playlists, { ...res.playlist, songs: [] }];
+        this.newPlaylistName    = '';
+        this.newPlaylistDesc    = '';
+        this.showCreatePlaylist = false;
+      }
+    });
   }
 
   openPlaylist(playlist: Playlist): void {
-    this.selectedPlaylist = playlist;
-    this.activeSection    = 'biblioteca';
+    this.songService.getPlaylistById(playlist.id).subscribe({
+      next: res => {
+        const songs = (res.playlist?.songs ?? res.songs ?? []).map((s: any) => this.mapSong(s));
+        this.selectedPlaylist = { ...playlist, songs };
+        this.activeSection    = 'biblioteca';
+      }
+    });
   }
 
   deletePlaylist(playlist: Playlist, event: Event): void {
     event.stopPropagation();
-    this.playlists = this.playlists.filter(p => p.id !== playlist.id);
-    if (this.selectedPlaylist?.id === playlist.id) this.selectedPlaylist = null;
+    this.songService.deletePlaylist(playlist.id).subscribe({
+      next: () => {
+        this.playlists = this.playlists.filter(p => p.id !== playlist.id);
+        if (this.selectedPlaylist?.id === playlist.id) this.selectedPlaylist = null;
+      }
+    });
   }
 
   removeSongFromPlaylist(song: Song, event: Event): void {
     event.stopPropagation();
     if (!this.selectedPlaylist) return;
-    this.selectedPlaylist.songs = this.selectedPlaylist.songs.filter(s => s.id !== song.id);
+    this.songService.removeSongFromPlaylist(this.selectedPlaylist.id, song.id).subscribe({
+      next: () => {
+        this.selectedPlaylist!.songs = this.selectedPlaylist!.songs.filter(s => s.id !== song.id);
+      }
+    });
   }
 
-  // ── Admin ───────────────────────────────────────────────────────
+  //── Modal agregar a playlist ─────────────────────────────────
+  openAddToPlaylist(song: Song, event: Event): void {
+    event.stopPropagation();
+    this.songToAdd         = song;
+    this.showPlaylistModal = true;
+  }
+
+  addToPlaylist(playlist: Playlist): void {
+    if (!this.songToAdd) return;
+    this.songService.addSongToPlaylist(playlist.id, this.songToAdd.id).subscribe({
+      next: () => {
+        this.showPlaylistModal = false;
+        this.songToAdd         = null;
+      }
+    });
+  }
+
+  closeModal(): void {
+    this.showPlaylistModal = false;
+    this.songToAdd         = null;
+  }
+
+  //── Admin ────────────────────────────────────────────────────
   onAdminAudio(e: Event) {
     this.adminAudioFile = (e.target as HTMLInputElement).files?.[0] ?? null;
   }
@@ -239,8 +331,8 @@ export class ProfileComponent implements OnInit {
       this.adminError = 'Título, artista, duración y audio son requeridos.';
       return;
     }
-    this.adminError = '';
-    this.adminMessage = '';
+    this.adminError     = '';
+    this.adminMessage   = '';
     this.adminUploading = true;
 
     const fd = new FormData();
@@ -267,7 +359,7 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
+  //── Helpers ──────────────────────────────────────────────────
   logout(): void { this.authService.logout(); }
 
   getInitials(): string {
